@@ -2,12 +2,17 @@
 from flask import render_template, request, redirect, url_for, flash
 from text import Text
 
+# Ключи базовой статистики (не сохраняются как отдельные метрики)
+STATS_KEYS = ['word_count', 'sentence_count', 'unique_word_count', 
+              'avg_word_length', 'long_word_count', 'avg_sentence_length', 
+              'total_syllables']
 
 def register_routes(app, db):
-    """Регистрация маршрутов с объектами app и db"""
+    """Регистрация всех маршрутов Flask с объектами app и db"""
     from models import init_models
     TextRecord, Metric = init_models(db)
-    
+
+    # Главная страница, отображает все тексты и сводную статистику по категориям
     @app.route('/')
     def index():
         texts = TextRecord.query.order_by(TextRecord.category, TextRecord.file_name).all()
@@ -53,9 +58,9 @@ def register_routes(app, db):
         
         return render_template('index.html', texts=texts, summary=summary)
     
+    # Загрузка нового текста - валидация файла, расчёт метрик, сохранение в БД
     @app.route('/add', methods=['POST'])
     def add_text():
-        """Обработка загрузки нового текста"""
         file = request.files.get('file')
         category = request.form.get('category')
 
@@ -69,6 +74,7 @@ def register_routes(app, db):
             flash('Ошибка: выберите корректную категорию', 'error')
             return redirect(url_for('index'))
 
+        # При ошибке - откат изменений
         try:
             content = file.read().decode('utf-8')
             filename = file.filename
@@ -90,9 +96,7 @@ def register_routes(app, db):
             db.session.flush()  # Получаем ID для метрик
 
             # Сохранение 6 метрик (исключая базовую статистику)
-            stats_keys = ['word_count', 'sentence_count', 'unique_word_count', 
-                         'avg_word_length', 'long_word_count', 'avg_sentence_length', 
-                         'total_syllables']
+            stats_keys = STATS_KEYS
             
             for name, value in metrics.items():
                 if isinstance(value, (int, float)) and name not in stats_keys:
@@ -107,9 +111,9 @@ def register_routes(app, db):
 
         return redirect(url_for('index'))
     
+    # Пересчёт метрик для одного текста по id, удаляет старые метрики перед записью новых
     @app.route('/reanalyze/<int:text_id>')
     def reanalyze_text(text_id):
-        """Пересчёт метрик для существующего текста"""
         text_record = TextRecord.query.get_or_404(text_id)
         try:
             # Пересоздание Text-объекта из сохранённого текста
@@ -125,9 +129,7 @@ def register_routes(app, db):
             Metric.query.filter_by(text_id=text_id).delete()
 
             # Добавление новых метрик (без базовой статистики)
-            stats_keys = ['word_count', 'sentence_count', 'unique_word_count', 
-                         'avg_word_length', 'long_word_count', 'avg_sentence_length', 
-                         'total_syllables']
+            stats_keys = STATS_KEYS
             
             for name, value in metrics.items():
                 if isinstance(value, (int, float)) and name not in stats_keys:
@@ -142,9 +144,9 @@ def register_routes(app, db):
 
         return redirect(url_for('index'))
     
+    # Пересчёт всех текстов в базе для обновления при изменении алгоритма
     @app.route('/reanalyze_all')
     def reanalyze_all_texts():
-        """Пересчёт метрик для всех текстов в базе"""
         try:
             texts = TextRecord.query.all()
             count = 0
@@ -167,9 +169,7 @@ def register_routes(app, db):
                 Metric.query.filter_by(text_id=text_record.id).delete()
 
                 # Добавление новых метрик (без базовой статистики)
-                stats_keys = ['word_count', 'sentence_count', 'unique_word_count', 
-                             'avg_word_length', 'long_word_count', 'avg_sentence_length', 
-                             'total_syllables']
+                stats_keys = STATS_KEYS
                 
                 for name, value in metrics.items():
                     if isinstance(value, (int, float)) and name not in stats_keys:
@@ -190,9 +190,9 @@ def register_routes(app, db):
 
         return redirect(url_for('index'))
     
+    # Удаление текста и всех связанных метрик
     @app.route('/delete/<int:text_id>')
     def delete_text(text_id):
-        """Удаление текста и всех его метрик"""
         text_record = TextRecord.query.get_or_404(text_id)
         db.session.delete(text_record)
         db.session.commit()
