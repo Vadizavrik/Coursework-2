@@ -32,14 +32,15 @@ def create_app():
     
     return app, db, migrate
 
-
+# Точка входа. Создание таблиц при первом запуске
 if __name__ == '__main__':
     app, db, migrate = create_app()
     
-    # Создание таблиц при первом запуске
+    # Автоматическое создание схемы БД
     with app.app_context():
         db.create_all()
     
+    # Сообщение при запуске
     print("=" * 60)
     print("Запуск веб-приложения")
     print("=" * 60)
