@@ -92,7 +92,7 @@ class Text:
         # Параметр S (предложения на 100 слов)
         S = (len(self.sentences) / len(self.words)) * 100
         
-        # Параметр L (буквы на морфему, нормализовано)
+        # Параметр L (нормализован через отношение букв к морфемам)
         total_letters = sum(len(word) for word in self.words)
         total_morphemes = sum(
             self.morph_analyzer.count_morphemes(word) 
