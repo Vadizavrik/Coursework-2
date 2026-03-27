@@ -33,17 +33,11 @@
 ## Установка
 
 ```bash
-# Создайте виртуальное окружение
-python -m venv venv
-
-# Активируйте его:
-venv\Scripts\activate
-
 # Установите зависимости
 pip install -r requirements.txt
 
-# Инициализируйте базу данных
-flask db upgrade
-
 # Запустите приложение
 python app.py
+
+# База данных создаётся автоматически при запуске
+# Откройте в браузере: http://localhost:5000
