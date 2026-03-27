@@ -1,5 +1,6 @@
 # Морфемный анализатор для татарского языка
 # Используется для расчёта морфологических метрик
+# Основан на курсовой работе 1 курса
 
 class TatarMorphemeAnalyzer:
     """Анализ морфемной структуры татарских слов"""
@@ -29,7 +30,10 @@ class TatarMorphemeAnalyzer:
         self.sorted_affixes = sorted(set(self.all_affixes), key=len, reverse=True)
 
     def _extract_morphemes(self, word: str) -> list:
-        """Извлекает морфемы из слова с учётом гармонии гласных"""
+        """
+        Извлекает морфемы из слова с учётом гармонии гласных, 
+        последовательно отсекая аффиксы с конца слова
+        """
         if not word or len(word) < 2:  # Минимум 2 буквы для корня
             return [word]
 
