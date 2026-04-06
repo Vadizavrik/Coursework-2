@@ -5,7 +5,7 @@
 class TatarMorphemeAnalyzer:
     """Анализ морфемной структуры татарских слов"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Полный список аффиксов (сгруппировано по частям речи)
         self.all_affixes = [
             # Существительные
@@ -29,7 +29,7 @@ class TatarMorphemeAnalyzer:
         # Сортирует по длине (сначала длинные) — важно для корректного выделения
         self.sorted_affixes = sorted(set(self.all_affixes), key=len, reverse=True)
 
-    def _extract_morphemes(self, word: str) -> list:
+    def _extract_morphemes(self, word: str) -> list[str]:
         """
         Извлекает морфемы из слова с учётом гармонии гласных, 
         последовательно отсекая аффиксы с конца слова
