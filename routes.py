@@ -7,14 +7,14 @@ STATS_KEYS = ['word_count', 'sentence_count', 'unique_word_count',
               'avg_word_length', 'long_word_count', 'avg_sentence_length', 
               'total_syllables']
 
-def register_routes(app, db):
+def register_routes(app, db) -> None:
     """Регистрация всех маршрутов Flask с объектами app и db"""
     from models import init_models
     TextRecord, Metric = init_models(db)
 
     # Главная страница, отображает все тексты и сводную статистику по категориям
     @app.route('/')
-    def index():
+    def index() -> None:
         texts = TextRecord.query.order_by(TextRecord.category, TextRecord.file_name).all()
         
         # Словарь метрик для каждого текста
@@ -60,7 +60,7 @@ def register_routes(app, db):
     
     # Загрузка нового текста - валидация файла, расчёт метрик, сохранение в БД
     @app.route('/add', methods=['POST'])
-    def add_text():
+    def add_text() -> None:
         file = request.files.get('file')
         category = request.form.get('category')
 
@@ -113,7 +113,7 @@ def register_routes(app, db):
     
     # Пересчёт метрик для одного текста по id, удаляет старые метрики перед записью новых
     @app.route('/reanalyze/<int:text_id>')
-    def reanalyze_text(text_id):
+    def reanalyze_text(text_id: int) -> None:
         text_record = TextRecord.query.get_or_404(text_id)
         try:
             # Пересоздание Text-объекта из сохранённого текста
@@ -146,7 +146,7 @@ def register_routes(app, db):
     
     # Пересчёт всех текстов в базе для обновления при изменении алгоритма
     @app.route('/reanalyze_all')
-    def reanalyze_all_texts():
+    def reanalyze_all_texts() -> None:
         try:
             texts = TextRecord.query.all()
             count = 0
@@ -192,7 +192,7 @@ def register_routes(app, db):
     
     # Удаление текста и всех связанных метрик
     @app.route('/delete/<int:text_id>')
-    def delete_text(text_id):
+    def delete_text(text_id: int) -> None:
         text_record = TextRecord.query.get_or_404(text_id)
         db.session.delete(text_record)
         db.session.commit()
