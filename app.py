@@ -11,7 +11,7 @@ class Base(DeclarativeBase):
     pass
 
 
-def create_app():
+def create_app()-> tuple[Flask, SQLAlchemy, Migrate]:
     """Фабрика приложения — создаёт app, db, migrate"""
     app = Flask(__name__)
     app.secret_key = 'tatar_complexity_secret_key'
