@@ -6,7 +6,7 @@ from tatar_morpheme_analyzer import TatarMorphemeAnalyzer
 class Text:
     """Текст с набором метрик сложности"""
 
-    def __init__(self, content: str = "", category: str = None, title: str = None):
+    def __init__(self, content: str = "", category: str = None, title: str = None) -> None:
         self.raw_text = content
         self.category = category
         self.title = title or 'Без названия'
@@ -16,7 +16,7 @@ class Text:
         self.metrics = {}
         self.morph_analyzer = TatarMorphemeAnalyzer()
 
-    def preprocess(self):
+    def preprocess(self) -> None:
         """Очистка и разбиение текста на предложения и слова"""
         text = self.raw_text.lower()
         
@@ -197,7 +197,7 @@ class Text:
 
     # Общий метод расчёта
 
-    def calculate_all_metrics(self) -> dict:
+    def calculate_all_metrics(self) -> dict[str, float | int]:
         """Считает все метрики и возвращает словарь результатов"""
         # Если текст не обработан — запускает препроцессинг
         if not self.words:
