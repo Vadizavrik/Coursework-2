@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Заголовок страницы -->
     <title>Анализатор сложности татарских текстов</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
@@ -40,6 +41,7 @@
         <form method="POST" action="/add" enctype="multipart/form-data">
             <h3>Добавить новый текст</h3>
             <input type="file" name="file" accept=".txt" required>
+            <!-- Выбор из трёх категорий -->
             <select name="category" required>
                 <option value="">Выберите категорию</option>
                 <option value="simple">Простой (сказки)</option>
@@ -49,7 +51,7 @@
             <button type="submit">Загрузить и проанализировать</button>
         </form>
 
-        <!-- Сводка по категориям -->
+        <!-- Сводная статистика по категориям, средние значения метрик-->
         <h2>Сводка по категориям</h2>
         {% if summary %}
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
@@ -77,7 +79,7 @@
         <p>Нет данных для сводки.</p>
         {% endif %}
 
-        <!-- Таблица текстов -->
+        <!-- Таблица всех проанализированных текстов с детализацией по метрикам -->
         <h2>Все проанализированные тексты</h2>
         
         <!-- Кнопка массового пересчёта метрик -->
@@ -140,6 +142,126 @@
         {% else %}
         <p>Нет проанализированных текстов. Добавьте первый!</p>
         {% endif %}
+
+        <!-- Справка по метрикам -->
+        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <h3>Что означают эти метрики?</h3>
+            <p style="color: #666; margin-bottom: 25px; line-height: 1.6;">
+                Каждая метрика измеряет сложность текста по-своему. Чем выше значение — тем сложнее текст. 
+                Ниже — краткие пояснения для всех 6 метрик, адаптированных для татарского языка.
+            </p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+                <!-- LIX -->
+                <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #3498db;">
+                    <h4 style="margin-top: 0; color: #2c3e50;">LIX (Индекс удобочитаемости)</h4>
+                    <p style="line-height: 1.6; color: #555;">
+                        Метрика оценивает сложность через длину предложений и долю «длинных» слов. 
+                        Чем длиннее предложения и чем больше длинных слов — тем выше балл. 
+                        Для татарского языка порог «длинного слова» увеличен с 6 до 8 символов, 
+                        потому что татарские слова длиннее из-за аффиксов.
+                    </p>
+                    <p style="margin-top: 15px; padding: 10px; background: #e8f4fc; border-radius: 4px;">
+                        <strong>Как читать:</strong> 
+                        <span style="color: #27ae60;">20–30 — легко</span> | 
+                        <span style="color: #f39c12;">40–50 — средне</span> | 
+                        <span style="color: #e74c3c;">50+ — сложно</span>
+                    </p>
+                </div>
+                
+                <!-- FKGL -->
+                <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #9b59b6;">
+                    <h4 style="margin-top: 0; color: #2c3e50;">Флеш-Кинкайд (FKGL)</h4>
+                    <p style="line-height: 1.6; color: #555;">
+                        Метрика показывает, сколько лет образования нужно для понимания текста. 
+                        Оригинальная формула считает слоги, но для татарского это не подходит — 
+                        аффиксы добавляют слоги без увеличения сложности. Мы заменили слоги на долю слов ≥8 символов 
+                        и подобрали коэффициенты (0.32, 12.0, -0.5) по корпусу из 18 текстов.
+                    </p>
+                    <p style="margin-top: 15px; padding: 10px; background: #f4ecf7; border-radius: 4px;">
+                        <strong>Как читать:</strong> 
+                        <span style="color: #27ae60;">1–5 — детские тексты</span> | 
+                        <span style="color: #f39c12;">6–10 — новости</span> | 
+                        <span style="color: #e74c3c;">10+ — научные</span>
+                    </p>
+                </div>
+                
+                <!-- CLI -->
+                <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #e67e22;">
+                    <h4 style="margin-top: 0; color: #2c3e50;">Колман-Лиау (CLI)</h4>
+                    <p style="line-height: 1.6; color: #555;">
+                        Метрика основана на длине слова в буквах и длине предложения. 
+                        Проблема в том, что в татарском длина слова завышается из-за аффиксов. 
+                        Мы нормализовали длину через отношение букв к морфемам. 
+                    </p>
+                    <p style="margin-top: 15px; padding: 10px; background: #fdebd0; border-radius: 4px;">
+                        <strong>Как читать:</strong> 
+                        <span style="color: #27ae60;">2–5 — легко</span> | 
+                        <span style="color: #f39c12;">6–10 — средне</span> | 
+                        <span style="color: #e74c3c;">10+ — сложно</span>
+                    </p>
+                </div>
+                
+                <!-- TTR -->
+                <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #1abc9c;">
+                    <h4 style="margin-top: 0; color: #2c3e50;">TTR (Лексическое разнообразие)</h4>
+                    <p style="line-height: 1.6; color: #555;">
+                        Показывает, насколько богат словарный запас текста. 
+                        Считается как отношение уникальных слов к общему числу. 
+                        Для татарского считаем не словоформы, а корни. 
+                        Используется скользящее окно 100 слов.
+                    </p>
+                    <p style="margin-top: 15px; padding: 10px; background: #d5f5e3; border-radius: 4px;">
+                        <strong>Как читать:</strong> 
+                        <span style="color: #27ae60;">0.3–0.5 — простая лексика</span> | 
+                        <span style="color: #f39c12;">0.6–0.8 — богатая</span> | 
+                        <span style="color: #e74c3c;">0.8+ — очень богатая</span>
+                    </p>
+                </div>
+                
+                <!-- Жиро -->
+                <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #e74c3c;">
+                    <h4 style="margin-top: 0; color: #2c3e50;">Индекс Жиро</h4>
+                    <p style="line-height: 1.6; color: #555;">
+                        Улучшенная версия TTR, которая учитывает длину текста. 
+                        В длинных текстах слова повторяются, поэтому TTR занижается. 
+                        Индекс Жиро делит на квадратный корень из длины текста — 
+                        это делает сравнение коротких и длинных текстов более честным.
+                    </p>
+                    <p style="margin-top: 15px; padding: 10px; background: #fadbd8; border-radius: 4px;">
+                        <strong>Как читать:</strong> 
+                        <span style="color: #27ae60;">5–8 — низкое разнообразие</span> | 
+                        <span style="color: #f39c12;">8–12 — среднее</span> | 
+                        <span style="color: #e74c3c;">12+ — высокое</span>
+                    </p>
+                </div>
+                
+                <!-- MMW -->
+                <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #34495e;">
+                    <h4 style="margin-top: 0; color: #2c3e50;">MMW (Морфологическая насыщенность)</h4>
+                    <p style="line-height: 1.6; color: #555;">
+                        Показывает, насколько «плотные» слова в тексте. 
+                        В татарском даже простое слово может содержать 3–5 морфем.
+                        Метрика комбинирует морфемы и длину предложений. 
+                        Используется медиана для устойчивости к выбросам.
+                    </p>
+                    <p style="margin-top: 15px; padding: 10px; background: #eaecee; border-radius: 4px;">
+                        <strong>Как читать:</strong> 
+                        <span style="color: #27ae60;">1–2 — простые слова</span> | 
+                        <span style="color: #f39c12;">2–3 — средние</span> | 
+                        <span style="color: #e74c3c;">3+ — сложные формы</span>
+                    </p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 25px; padding: 20px; background: #e8f4fc; border-radius: 6px; border-left: 4px solid #3498db;">
+                <p style="margin: 0; color: #2c3e50; line-height: 1.6;">
+                    <strong> Важно:</strong> Ни одна метрика не идеальна. Для точной оценки смотрите на все 6 показателей вместе. 
+                    Синтаксические метрики (LIX, FKGL, CLI) лучше отделяют детские тексты, 
+                    а лексические (TTR, Жиро) помогают различить новости и научные статьи.
+                </p>
+            </div>
+        </div>
     </div>
 </body>
 </html>
