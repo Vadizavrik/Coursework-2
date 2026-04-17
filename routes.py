@@ -198,3 +198,61 @@ def register_routes(app, db) -> None:
         db.session.commit()
         flash('Текст удалён', 'message')
         return redirect(url_for('index'))
+    
+    # Экспорт всех текстов и их метрик в CSV
+    @app.route('/export-all/csv')
+    def export_all_csv():
+        import io, csv
+        from sqlalchemy.orm import joinedload
+        
+        # Создание буфера в памяти
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Запись заголовока (колонки таблицы)
+        writer.writerow([
+            'Файл',
+            'Категория',
+            'Слов',
+            'LIX',
+            'Флеш-Кинкайд',
+            'Колман-Лиау',
+            'TTR',
+            'Жиро',
+            'MMW'
+        ])
+        
+        # Сбор всех текстов с метриками
+        texts = TextRecord.query.all()
+        
+        # Для каждого текста — одна строка в CSV
+        for text in texts:
+            # Сбор метрик в словарь для удобного доступа
+            metrics_dict = {m.metric_name: m.metric_value for m in text.metrics}
+            
+            # Перевод категории в понятное название
+            category_map = {
+                'simple': 'Детские сказки',
+                'medium': 'Новостные тексты',
+                'complex': 'Научные тексты'
+            }
+            
+            # Запись строки
+            writer.writerow([
+                text.file_name,
+                category_map.get(text.category, text.category),
+                text.word_count,
+                round(metrics_dict.get('lix', 0), 2),
+                round(metrics_dict.get('flesch_kincaid', 0), 2),
+                round(metrics_dict.get('coleman_liau', 0), 2),
+                round(metrics_dict.get('ttr', 0), 3),
+                round(metrics_dict.get('guiraud', 0), 2),
+                round(metrics_dict.get('mmw', 0), 2)
+            ])
+        
+        # Возврат файла
+        output.seek(0)
+        return output.getvalue(), 200, {
+            'Content-Type': 'text/csv; charset=utf-8',
+            'Content-Disposition': 'attachment; filename=all_texts_metrics.csv'
+        }
