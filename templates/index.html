@@ -22,7 +22,33 @@
         .error { background: #f8d7da; color: #721c24; }
         .actions a { color: #e74c3c; text-decoration: none; margin-right: 10px; }
         .actions a:hover { text-decoration: underline; }
+        .filters { margin: 15px 0; padding: 15px; background: #f0f8ff; border-radius: 6px; }
+        .filter-group { margin-bottom: 15px; }
+        .filter-group label { font-weight: bold; margin-right: 10px; }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; }
+        .checkbox-group label { cursor: pointer; }
     </style>
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.dataTables.min.css">
+
+    <!-- MathJax для отображения формул -->
+    <script>
+    window.MathJax = {
+    tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true
+    },
+    options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js">
+    </script>
+
 </head>
 <body>
     <div class="container">
@@ -79,17 +105,53 @@
         <p>Нет данных для сводки.</p>
         {% endif %}
 
+
         <!-- Таблица всех проанализированных текстов с детализацией по метрикам -->
         <h2>Все проанализированные тексты</h2>
         
-        <!-- Кнопка массового пересчёта метрик -->
-        <div style="margin: 15px 0;">
+        <!-- Кнопки действий -->
+         <div style="margin: 15px 0; display: flex; gap: 10px; align-items: center;">
+            <!-- Кнопка массового пересчёта метрик -->
             <a href="/reanalyze_all" 
-               onclick="return confirm('Пересчитать метрики для всех текстов?')"
-               style="background: #f39c12; color: white; padding: 8px 15px; 
-                      text-decoration: none; border-radius: 4px; display: inline-block;">
-               Пересчитать все метрики
+            onclick="return confirm('Пересчитать метрики для всех текстов?')"
+            style="background: #f39c12; color: white; padding: 10px 20px; 
+                    text-decoration: none; border-radius: 4px; display: inline-block;">
+            Пересчитать все метрики
             </a>
+
+            <!-- Кнопка экспорта всей таблицы -->
+            <a href="/export-all/csv"
+            style="background: #27ae60; color: white; padding: 10px 20px; 
+                    text-decoration: none; border-radius: 4px; display: inline-block;">
+            Экспорт в CSV
+            </a>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="filters">
+            <!-- Фильтр по категории -->
+            <div class="filter-group">
+                <label for="categoryFilter">Показать категорию:</label>
+                <select id="categoryFilter" style="padding: 5px 10px;">
+                    <option value="">Все категории</option>
+                    <option value="Детские сказки">Детские сказки</option>
+                    <option value="Новостные тексты">Новостные тексты</option>
+                    <option value="Научные тексты">Научные тексты</option>
+                </select>
+            </div>
+            
+            <!-- Чекбоксы для метрик -->
+            <div class="filter-group">
+                <label>Показать метрики:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" checked data-column="3"> LIX</label>
+                    <label><input type="checkbox" checked data-column="4"> Флеш-Кинкайд</label>
+                    <label><input type="checkbox" checked data-column="5"> Колман-Лиау</label>
+                    <label><input type="checkbox" checked data-column="6"> TTR</label>
+                    <label><input type="checkbox" checked data-column="7"> Жиро</label>
+                    <label><input type="checkbox" checked data-column="8"> MMW</label>
+                </div>
+            </div>
         </div>
 
         {% if texts %}
@@ -161,6 +223,18 @@
                         Для татарского языка порог «длинного слова» увеличен с 6 до 8 символов, 
                         потому что татарские слова длиннее из-за аффиксов.
                     </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>Формула:</strong><br>
+                        $$LIX = \frac{N_{words}}{N_{sentences}} + \frac{N_{long}^{(8)} \times 100}{N_{words}}$$
+                    </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>где:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
+                            <li style="margin: 5px 0;">$N_{words}$ — общее число слов в тексте</li>
+                            <li style="margin: 5px 0;">$N_{sentences}$ — число предложений</li>
+                            <li style="margin: 5px 0;">$N_{long}^{(8)}$ — число слов длиной ≥8 символов (адаптация для татарского)</li>
+                        </ul>
+                    </p>
                     <p style="margin-top: 15px; padding: 10px; background: #e8f4fc; border-radius: 4px;">
                         <strong>Как читать:</strong> 
                         <span style="color: #27ae60;">20–30 — легко</span> | 
@@ -178,6 +252,18 @@
                         аффиксы добавляют слоги без увеличения сложности. Мы заменили слоги на долю слов ≥8 символов 
                         и подобрали коэффициенты (0.32, 12.0, -0.5) по корпусу из 18 текстов.
                     </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>Адаптированная формула:</strong><br>
+                        $$FKGL = 0.32 \times ASL + 12.0 \times \frac{N_{long}^{(8)}}{N_{total}} - 0.5$$
+                    </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>где:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
+                            <li style="margin: 5px 0;">$ASL = \frac{N_{words}}{N_{sentences}}$ — средняя длина предложения</li>
+                            <li style="margin: 5px 0;">$N_{long}^{(8)}$ — число слов длиной ≥8 символов</li>
+                            <li style="margin: 5px 0;">$N_{total}$ — общее число слов в тексте</li>
+                        </ul>
+                    </p>
                     <p style="margin-top: 15px; padding: 10px; background: #f4ecf7; border-radius: 4px;">
                         <strong>Как читать:</strong> 
                         <span style="color: #27ae60;">1–5 — детские тексты</span> | 
@@ -193,6 +279,19 @@
                         Метрика основана на длине слова в буквах и длине предложения. 
                         Проблема в том, что в татарском длина слова завышается из-за аффиксов. 
                         Мы нормализовали длину через отношение букв к морфемам. 
+                    </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>Формула:</strong><br>
+                        $$CLI = 0.0588 \times L_{norm} - 0.296 \times S - 9.5$$
+                    </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>где:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
+                            <li style="margin: 5px 0;">$L_{norm} = \frac{N_{letters}}{N_{morphemes}} \times 100$ — нормализованная длина слова</li>
+                            <li style="margin: 5px 0;">$S = \frac{N_{sentences}}{N_{words}} \times 100$ — плотность предложений</li>
+                            <li style="margin: 5px 0;">$N_{letters}$ — общее число букв</li>
+                            <li style="margin: 5px 0;">$N_{morphemes}$ — общее число морфем</li>
+                        </ul>
                     </p>
                     <p style="margin-top: 15px; padding: 10px; background: #fdebd0; border-radius: 4px;">
                         <strong>Как читать:</strong> 
@@ -211,6 +310,17 @@
                         Для татарского считаем не словоформы, а корни. 
                         Используется скользящее окно 100 слов.
                     </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>Формула (скользящее окно):</strong><br>
+                        $$TTR = \frac{1}{k} \sum_{i=1}^{k} \frac{V_{roots}^{(i)}}{100}$$
+                    </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>где:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
+                            <li style="margin: 5px 0;">$V_{roots}$ — число уникальных корней</li>
+                            <li style="margin: 5px 0;">$N_{words}$ — общее число слов</li>
+                        </ul>
+                    </p>
                     <p style="margin-top: 15px; padding: 10px; background: #d5f5e3; border-radius: 4px;">
                         <strong>Как читать:</strong> 
                         <span style="color: #27ae60;">0.3–0.5 — простая лексика</span> | 
@@ -228,6 +338,18 @@
                         Индекс Жиро делит на квадратный корень из длины текста — 
                         это делает сравнение коротких и длинных текстов более честным.
                     </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>Формула:</strong><br>
+                        $$R = \frac{V_{roots}}{\sqrt{N_{words}}}$$
+                    </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>где:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
+                            <li style="margin: 5px 0;">$V_{roots}$ — число уникальных корней</li>
+                            <li style="margin: 5px 0;">$N_{words}$ — общее число слов</li>
+                            <li style="margin: 5px 0;">$\sqrt{N}$ — квадратный корень из N (нормализация длины)</li>
+                        </ul>
+                    </p>
                     <p style="margin-top: 15px; padding: 10px; background: #fadbd8; border-radius: 4px;">
                         <strong>Как читать:</strong> 
                         <span style="color: #27ae60;">5–8 — низкое разнообразие</span> | 
@@ -244,6 +366,18 @@
                         В татарском даже простое слово может содержать 3–5 морфем.
                         Метрика комбинирует морфемы и длину предложений. 
                         Используется медиана для устойчивости к выбросам.
+                    </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>Формула:</strong><br>
+                        $$MMW = \frac{M_{total}}{N_{words}} \times \frac{Median(SL)}{10}$$
+                    </p>
+                    <p style="line-height: 1.6; color: #555;">
+                        <strong>где:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
+                            <li style="margin: 5px 0;">$M_{total}$ — общее число морфем в тексте</li>
+                            <li style="margin: 5px 0;">$N_{words}$ — общее число слов</li>
+                            <li style="margin: 5px 0;">$Median(SL)$ — медиана длин предложений (в словах)</li>
+                        </ul>
                     </p>
                     <p style="margin-top: 15px; padding: 10px; background: #eaecee; border-radius: 4px;">
                         <strong>Как читать:</strong> 
@@ -263,5 +397,45 @@
             </div>
         </div>
     </div>
+
+    <!-- jQuery (для DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/2.3.7/js/dataTables.min.js"></script>
+    
+    <!-- Код инициализации DataTables -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log(' Инициализация DataTables');
+        
+        // Инициализация таблицы
+        const table = new DataTable('table', {
+            language: {
+                url: '//cdn.datatables.net/plug-ins/2.3.7/i18n/ru.json'
+            },
+            pageLength: 10,
+            order: [[0, 'asc']]
+        });
+        console.log('DataTables инициализирован');
+        
+        // Фильтр по категории
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', function() {
+                table.column(1).search(this.value).draw();
+            });
+        }
+        
+        // Переключение видимости колонок (метрики)
+        document.querySelectorAll('input[data-column]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const columnIndex = this.getAttribute('data-column');
+                table.column(columnIndex).visible(this.checked);
+            });
+        });
+    });
+    </script>
+
 </body>
 </html>
